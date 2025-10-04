@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/joho/godotenv"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/config"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/handler"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/middleware"
@@ -11,6 +12,7 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
 	cfg := config.Load()
 
 	if cfg.Auth0Domain == "" || cfg.Auth0Audience == "" {
