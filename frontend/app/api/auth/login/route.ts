@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
   authUrl.searchParams.set("client_id", clientId!);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("scope", "openid profile email");
-  // audienceパラメータを一時的にコメントアウト
-  // authUrl.searchParams.set("audience", audience!);
+  authUrl.searchParams.set("audience", audience!);
 
   return NextResponse.redirect(authUrl.toString());
 }
