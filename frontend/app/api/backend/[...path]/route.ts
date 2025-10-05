@@ -1,30 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return handleRequest(request, await params, "GET");
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return handleRequest(request, await params, "POST");
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return handleRequest(request, await params, "PUT");
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return handleRequest(request, await params, "DELETE");
 }
@@ -32,7 +32,7 @@ export async function DELETE(
 async function handleRequest(
   request: NextRequest,
   params: { path: string[] },
-  method: string
+  method: string,
 ) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
@@ -67,7 +67,8 @@ async function handleRequest(
   return new NextResponse(data, {
     status: response.status,
     headers: {
-      "Content-Type": response.headers.get("Content-Type") || "application/json",
+      "Content-Type":
+        response.headers.get("Content-Type") || "application/json",
     },
   });
 }

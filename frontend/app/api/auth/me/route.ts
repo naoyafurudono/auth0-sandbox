@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -11,7 +11,7 @@ export async function GET() {
 
   // IDトークンをデコードしてユーザー情報を取得
   const payload = JSON.parse(
-    Buffer.from(idToken.split(".")[1], "base64").toString()
+    Buffer.from(idToken.split(".")[1], "base64").toString(),
   );
 
   return NextResponse.json({
