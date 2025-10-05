@@ -1,7 +1,9 @@
 "use client";
 
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface Profile {
   displayName?: string;
@@ -16,48 +18,31 @@ interface UserData {
 
 export default function ProfilePage() {
   const { user, isLoading } = useUser();
-  const [_profile, setProfile] = useState<Profile | null>(null);
-  const [userData, setUserData] = useState<UserData[]>([]);
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
   const [newContent, setNewContent] = useState("");
 
   const displayNameId = useId();
   const bioId = useId();
   const newContentId = useId();
 
-  const loadProfile = useCallback(async () => {
-    try {
-      const response = await fetch("/api/backend/api/v1/users/me/profile");
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data);
-        setDisplayName(data.displayName || "");
-        setBio(data.bio || "");
-      }
-    } catch (error) {
-      console.error("Failed to load profile:", error);
-    }
-  }, []);
+  const { data: profile, mutate: mutateProfile } = useSWR<Profile>(
+    user ? "/api/backend/api/v1/users/me/profile" : null,
+    fetcher,
+  );
 
-  const loadUserData = useCallback(async () => {
-    try {
-      const response = await fetch("/api/backend/api/v1/users/me/data");
-      if (response.ok) {
-        const data = await response.json();
-        setUserData(data);
-      }
-    } catch (error) {
-      console.error("Failed to load user data:", error);
-    }
-  }, []);
+  const { data: userData = [], mutate: mutateUserData } = useSWR<UserData[]>(
+    user ? "/api/backend/api/v1/users/me/data" : null,
+    fetcher,
+  );
+
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
-    if (user) {
-      loadProfile();
-      loadUserData();
+    if (profile) {
+      setDisplayName(profile.displayName || "");
+      setBio(profile.bio || "");
     }
-  }, [user, loadProfile, loadUserData]);
+  }, [profile]);
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +54,7 @@ export default function ProfilePage() {
       });
       if (response.ok) {
         alert("プロフィール更新成功！");
-        loadProfile();
+        mutateProfile();
       }
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -87,7 +72,7 @@ export default function ProfilePage() {
       });
       if (response.ok) {
         setNewContent("");
-        loadUserData();
+        mutateUserData();
       }
     } catch (error) {
       console.error("Failed to create data:", error);
