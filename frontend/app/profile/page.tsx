@@ -1,8 +1,11 @@
 "use client";
 
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useEffect, useId, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useId } from "react";
+import { useForm } from "react-hook-form";
 import useSWR from "swr";
+import { z } from "zod";
 import { fetcher } from "@/lib/fetcher";
 
 interface Profile {
@@ -16,9 +19,20 @@ interface UserData {
   createdAt: string;
 }
 
+const profileSchema = z.object({
+  displayName: z.string(),
+  bio: z.string(),
+});
+
+const dataSchema = z.object({
+  content: z.string().min(1, "コンテンツを入力してください"),
+});
+
+type ProfileForm = z.infer<typeof profileSchema>;
+type DataForm = z.infer<typeof dataSchema>;
+
 export default function ProfilePage() {
   const { user, isLoading } = useUser();
-  const [newContent, setNewContent] = useState("");
 
   const displayNameId = useId();
   const bioId = useId();
@@ -34,23 +48,33 @@ export default function ProfilePage() {
     fetcher,
   );
 
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
+  const { register: registerProfile, handleSubmit: handleSubmitProfile } =
+    useForm<ProfileForm>({
+      resolver: zodResolver(profileSchema),
+      values: {
+        displayName: profile?.displayName ?? "",
+        bio: profile?.bio ?? "",
+      },
+    });
 
-  useEffect(() => {
-    if (profile) {
-      setDisplayName(profile.displayName || "");
-      setBio(profile.bio || "");
-    }
-  }, [profile]);
+  const {
+    register: registerData,
+    handleSubmit: handleSubmitData,
+    reset: resetData,
+    formState: { errors },
+  } = useForm<DataForm>({
+    resolver: zodResolver(dataSchema),
+    defaultValues: {
+      content: "",
+    },
+  });
 
-  const updateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const updateProfile = async (data: ProfileForm) => {
     try {
       const response = await fetch("/api/backend/api/v1/users/me/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName, bio }),
+        body: JSON.stringify(data),
       });
       if (response.ok) {
         alert("プロフィール更新成功！");
@@ -62,16 +86,15 @@ export default function ProfilePage() {
     }
   };
 
-  const createData = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const createData = async (data: DataForm) => {
     try {
       const response = await fetch("/api/backend/api/v1/users/me/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: newContent }),
+        body: JSON.stringify(data),
       });
       if (response.ok) {
-        setNewContent("");
+        resetData();
         mutateUserData();
       }
     } catch (error) {
@@ -95,7 +118,10 @@ export default function ProfilePage() {
 
         <div className="mb-8 p-4 bg-white border rounded">
           <h2 className="text-xl font-bold mb-4">プロフィール編集</h2>
-          <form onSubmit={updateProfile} className="space-y-4">
+          <form
+            onSubmit={handleSubmitProfile(updateProfile)}
+            className="space-y-4"
+          >
             <div>
               <label htmlFor={displayNameId} className="block mb-1">
                 表示名
@@ -103,8 +129,7 @@ export default function ProfilePage() {
               <input
                 id={displayNameId}
                 type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                {...registerProfile("displayName")}
                 className="w-full border rounded px-3 py-2"
               />
             </div>
@@ -114,8 +139,7 @@ export default function ProfilePage() {
               </label>
               <textarea
                 id={bioId}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                {...registerProfile("bio")}
                 className="w-full border rounded px-3 py-2"
                 rows={4}
               />
@@ -131,7 +155,7 @@ export default function ProfilePage() {
 
         <div className="mb-8 p-4 bg-white border rounded">
           <h2 className="text-xl font-bold mb-4">データ作成</h2>
-          <form onSubmit={createData} className="space-y-4">
+          <form onSubmit={handleSubmitData(createData)} className="space-y-4">
             <div>
               <label htmlFor={newContentId} className="block mb-1">
                 コンテンツ
@@ -139,11 +163,14 @@ export default function ProfilePage() {
               <input
                 id={newContentId}
                 type="text"
-                value={newContent}
-                onChange={(e) => setNewContent(e.target.value)}
+                {...registerData("content")}
                 className="w-full border rounded px-3 py-2"
-                required
               />
+              {errors.content && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.content.message}
+                </p>
+              )}
             </div>
             <button
               type="submit"
