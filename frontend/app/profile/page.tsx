@@ -1,24 +1,32 @@
 "use client";
 
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
+
+interface Profile {
+  displayName?: string;
+  bio?: string;
+}
+
+interface UserData {
+  id: string;
+  content: string;
+  createdAt: string;
+}
 
 export default function ProfilePage() {
   const { user, isLoading } = useUser();
-  const [profile, setProfile] = useState<any>(null);
-  const [userData, setUserData] = useState<any[]>([]);
+  const [_profile, setProfile] = useState<Profile | null>(null);
+  const [userData, setUserData] = useState<UserData[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [newContent, setNewContent] = useState("");
 
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-      loadUserData();
-    }
-  }, [user]);
+  const displayNameId = useId();
+  const bioId = useId();
+  const newContentId = useId();
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const response = await fetch("/api/backend/api/v1/users/me/profile");
       if (response.ok) {
@@ -30,9 +38,9 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Failed to load profile:", error);
     }
-  };
+  }, []);
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       const response = await fetch("/api/backend/api/v1/users/me/data");
       if (response.ok) {
@@ -42,7 +50,14 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Failed to load user data:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+      loadUserData();
+    }
+  }, [user, loadProfile, loadUserData]);
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,8 +112,11 @@ export default function ProfilePage() {
           <h2 className="text-xl font-bold mb-4">プロフィール編集</h2>
           <form onSubmit={updateProfile} className="space-y-4">
             <div>
-              <label className="block mb-1">表示名</label>
+              <label htmlFor={displayNameId} className="block mb-1">
+                表示名
+              </label>
               <input
+                id={displayNameId}
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -106,8 +124,11 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block mb-1">自己紹介</label>
+              <label htmlFor={bioId} className="block mb-1">
+                自己紹介
+              </label>
               <textarea
+                id={bioId}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 className="w-full border rounded px-3 py-2"
@@ -127,8 +148,11 @@ export default function ProfilePage() {
           <h2 className="text-xl font-bold mb-4">データ作成</h2>
           <form onSubmit={createData} className="space-y-4">
             <div>
-              <label className="block mb-1">コンテンツ</label>
+              <label htmlFor={newContentId} className="block mb-1">
+                コンテンツ
+              </label>
               <input
+                id={newContentId}
                 type="text"
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}

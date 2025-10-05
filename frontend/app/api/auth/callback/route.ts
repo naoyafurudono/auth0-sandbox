@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const domain = process.env.AUTH0_ISSUER_BASE_URL;
   const clientId = process.env.AUTH0_CLIENT_ID;
   const clientSecret = process.env.AUTH0_CLIENT_SECRET;
-  const redirectUri = process.env.AUTH0_BASE_URL + "/api/auth/callback";
+  const redirectUri = `${process.env.AUTH0_BASE_URL}/api/auth/callback`;
 
   const tokenResponse = await fetch(`${domain}/oauth/token`, {
     method: "POST",
