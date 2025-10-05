@@ -45,7 +45,7 @@ func (h *UserHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := h.store.GetUserProfile(user.ID)
+	profile, err := h.store.GetUserProfile(user.Id)
 	if err == model.ErrNotFound {
 		writeError(w, "Profile not found", http.StatusNotFound)
 		return
@@ -77,7 +77,7 @@ func (h *UserHandler) UpdateUserProfile(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	profile, err := h.store.CreateOrUpdateUserProfile(user.ID, &update)
+	profile, err := h.store.CreateOrUpdateUserProfile(user.Id, &update)
 	if err != nil {
 		writeError(w, "Failed to update profile", http.StatusInternalServerError)
 		return
@@ -99,7 +99,7 @@ func (h *UserHandler) GetUserData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.store.GetUserData(user.ID)
+	data, err := h.store.GetUserData(user.Id)
 	if err != nil {
 		writeError(w, "Failed to get user data", http.StatusInternalServerError)
 		return
@@ -132,7 +132,7 @@ func (h *UserHandler) CreateUserData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.store.CreateUserData(user.ID, &create)
+	data, err := h.store.CreateUserData(user.Id, &create)
 	if err != nil {
 		writeError(w, "Failed to create user data", http.StatusInternalServerError)
 		return
@@ -148,5 +148,5 @@ func writeJSON(w http.ResponseWriter, data interface{}, status int) {
 }
 
 func writeError(w http.ResponseWriter, message string, status int) {
-	writeJSON(w, model.ErrorResponse{Message: message}, status)
+	writeJSON(w, model.Error{Message: message}, status)
 }

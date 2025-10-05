@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 var (
@@ -32,19 +33,24 @@ func (s *Store) GetOrCreateUser(auth0ID, email, name string) (*User, error) {
 	defer s.mu.Unlock()
 
 	for _, user := range s.users {
-		if user.Auth0ID == auth0ID {
+		if user.Auth0Id == auth0ID {
 			return user, nil
 		}
 	}
 
+	var namePtr *string
+	if name != "" {
+		namePtr = &name
+	}
+
 	user := &User{
-		ID:        uuid.New().String(),
-		Auth0ID:   auth0ID,
-		Email:     email,
-		Name:      name,
+		Id:        uuid.New().String(),
+		Auth0Id:   auth0ID,
+		Email:     openapi_types.Email(email),
+		Name:      namePtr,
 		CreatedAt: time.Now(),
 	}
-	s.users[user.ID] = user
+	s.users[user.Id] = user
 	return user, nil
 }
 
@@ -53,7 +59,7 @@ func (s *Store) GetUserByAuth0ID(auth0ID string) (*User, error) {
 	defer s.mu.RUnlock()
 
 	for _, user := range s.users {
-		if user.Auth0ID == auth0ID {
+		if user.Auth0Id == auth0ID {
 			return user, nil
 		}
 	}
@@ -78,14 +84,14 @@ func (s *Store) CreateOrUpdateUserProfile(userID string, update *UserProfileUpda
 	profile, exists := s.profiles[userID]
 	if !exists {
 		profile = &UserProfile{
-			ID:     uuid.New().String(),
-			UserID: userID,
+			Id:     uuid.New().String(),
+			UserId: userID,
 		}
 	}
 
 	profile.DisplayName = update.DisplayName
 	profile.Bio = update.Bio
-	profile.AvatarURL = update.AvatarURL
+	profile.AvatarUrl = update.AvatarUrl
 	profile.UpdatedAt = time.Now()
 
 	s.profiles[userID] = profile
@@ -108,8 +114,8 @@ func (s *Store) CreateUserData(userID string, create *UserDataCreate) (*UserData
 	defer s.mu.Unlock()
 
 	data := &UserData{
-		ID:        uuid.New().String(),
-		UserID:    userID,
+		Id:        uuid.New().String(),
+		UserId:    userID,
 		Content:   create.Content,
 		CreatedAt: time.Now(),
 	}

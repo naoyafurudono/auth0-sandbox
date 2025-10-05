@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/config"
+	"github.com/naoyafurudono/auth0-sandbox/backend/internal/generated"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/handler"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/middleware"
 	"github.com/naoyafurudono/auth0-sandbox/backend/internal/model"
@@ -29,31 +30,11 @@ func main() {
 	store := model.NewStore()
 	userHandler := handler.NewUserHandler(store)
 
-	mux := http.NewServeMux()
+	// 生成されたHandlerを使用してルーティングを設定
+	apiHandler := generated.Handler(userHandler)
 
-	mux.HandleFunc("/api/v1/users/me", userHandler.GetCurrentUser)
-	mux.HandleFunc("/api/v1/users/me/profile", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			userHandler.GetUserProfile(w, r)
-		case http.MethodPut:
-			userHandler.UpdateUserProfile(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-	mux.HandleFunc("/api/v1/users/me/data", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			userHandler.GetUserData(w, r)
-		case http.MethodPost:
-			userHandler.CreateUserData(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	handler := corsMiddleware.Handler(authMiddleware.ValidateJWT(mux))
+	// ミドルウェアを適用
+	handler := corsMiddleware.Handler(authMiddleware.ValidateJWT(apiHandler))
 
 	log.Printf("Starting server on port %s", cfg.Port)
 	log.Printf("Auth0 Domain: %s", cfg.Auth0Domain)

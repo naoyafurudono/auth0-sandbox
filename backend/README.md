@@ -1,33 +1,76 @@
-# Backend API
+# Auth0 Sandbox Backend
 
-Auth0 OIDC認証を使用したGo APIサーバー。
+Auth0を使用したOIDC認証を実装するバックエンドAPI
 
 ## セットアップ
 
-```bash
-cp .env.example .env
-# .envにAuth0の情報を設定
+### 環境変数
 
-go mod tidy
+`.env`ファイルを作成して以下の環境変数を設定してください：
+
+```
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_AUDIENCE=your-api-audience
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+PORT=8080
+```
+
+### 依存関係のインストール
+
+```bash
+go mod download
+```
+
+## OpenAPI仕様からのコード生成
+
+このプロジェクトでは、OpenAPI仕様から型定義とサーバーインターフェースを自動生成するために [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) を使用しています。
+
+### コード生成の実行
+
+OpenAPI仕様（`api/openapi.yaml`）を更新した後、以下のコマンドでコードを再生成してください：
+
+```bash
+make generate
+```
+
+生成されたコードは `internal/generated/api.gen.go` に出力されます。
+
+### 生成される内容
+
+- **モデル型定義**: OpenAPIスキーマから生成されるGo構造体
+- **ServerInterface**: APIハンドラーが実装すべきインターフェース
+- **リクエスト/レスポンス型**: JSONリクエストボディとレスポンスの型定義
+
+## 開発
+
+### サーバーの起動
+
+```bash
+make run
+```
+
+または
+
+```bash
 go run cmd/server/main.go
 ```
 
-## 設計の背景
+### ビルド
 
-### なぜインメモリストアか
-- サンドボックスとして簡潔に保つため
-- 本番ではPostgreSQL等のDBに置き換え（`internal/repository/`層を実装）
+```bash
+make build
+```
 
-### JWT検証の仕組み
-- Auth0のJWKS（公開鍵）を5分間キャッシュして検証
-- `sub`クレームをユーザーIDとして使用（Auth0の一意識別子）
-- Audienceチェックで意図したAPI向けのトークンかを確認
+実行可能ファイルは `bin/server` に出力されます。
 
-### CORS設定
-- フロントエンドからのクロスオリジンリクエストを許可
-- `credentials: "include"`でクッキーを送信可能に
+## API仕様
 
-## トラブルシューティング
+API仕様は `api/openapi.yaml` を参照してください。
 
-### Token validation error
-Auth0のAPIで該当アプリケーションが認可されているか確認。Machine to Machine Applicationsタブで`Authorized`をONに。
+主なエンドポイント：
+
+- `GET /api/v1/users/me` - 現在のユーザー情報を取得
+- `GET /api/v1/users/me/profile` - ユーザープロフィールを取得
+- `PUT /api/v1/users/me/profile` - ユーザープロフィールを更新
+- `GET /api/v1/users/me/data` - ユーザーデータのリストを取得
+- `POST /api/v1/users/me/data` - ユーザーデータを作成
