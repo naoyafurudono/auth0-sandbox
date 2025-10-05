@@ -3,5 +3,4 @@ generate:
   models: true
   std-http-server: true
 output: internal/generated/api.gen.go
-output-options:
-  skip-prune: true
+output-options: {}
